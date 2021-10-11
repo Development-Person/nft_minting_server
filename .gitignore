@@ -1,2 +1,5 @@
 .env
 node_modules
+priv/
+tmp/
+connect_node.zsh
