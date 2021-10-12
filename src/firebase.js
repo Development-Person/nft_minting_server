@@ -1,5 +1,5 @@
 import dotenv from 'dotenv';
-dotenv.config({ path: '../.env' });
+dotenv.config({ path: '~/cardano/minting_server/.env' });
 import { initializeApp } from 'firebase/app';
 import { getFirestore, connectFirestoreEmulator } from 'firebase/firestore';
 
@@ -16,7 +16,7 @@ export function initializeFirebase() {
   };
 
   const app = initializeApp(firebaseConfig);
-  const db = getFirestore(app);
+  const db = getFirestore();
   connectFirestoreEmulator(db, 'localhost', 8080);
   return db;
 }
