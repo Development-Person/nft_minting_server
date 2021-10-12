@@ -7,7 +7,7 @@ import {
 } from 'firebase/firestore';
 import { initializeFirebase } from './firebase.js';
 
-export async function updateDatabase(
+export async function updateDatabaseTransaction(
   transactionId,
   newTransactionData,
   status

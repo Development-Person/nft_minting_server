@@ -1,8 +1,10 @@
 import { collection, getDocs } from 'firebase/firestore';
 import { refund } from './src/refund.js';
 import { initializeFirebase } from './src/firebase.js';
-import { updateDatabase } from './src/update_database.js';
-import { mintNFT } from './src/mint_nft';
+import { updateDatabaseTransaction } from './src/update_database_transaction.js';
+import { mintNFT } from './src/mint_nft.js';
+import { sendNFT } from './src/send_nft.js';
+import { markNFT } from './src/mark_nft.js';
 
 //1. Initialize firebase and return db
 const db = initializeFirebase();
@@ -30,7 +32,7 @@ for (const transaction of savedIncomingTransactionsArray) {
       );
 
       //A2. Update the database
-      const databaseUpdateRefund = await updateDatabase(
+      const databaseUpdateRefund = await updateDatabaseTransaction(
         transaction.id,
         refundData,
         'refund_complete'
@@ -43,28 +45,25 @@ for (const transaction of savedIncomingTransactionsArray) {
     case 'mint':
       //B1. Mint the NFT
       console.log(`Creating nft for ${transaction.id}`);
-
       const nft = await mintNFT();
 
-      //Created:  4161264a345e0472b234a458313862c9e2cb380699dd355daf3ec00c.2
-      //U4PQsHrT5Ef1pi5NXa3Y
+      //B2. Mark NFT as minted
+      await markNFT(nft.id, 'minted');
 
-      //B2. Send to payer
-      // TODO
-      const sendData = await sendNFT(
+      //B3. Send to payer
+      const sendNFTData = await sendNFT(
         nft.asset,
         transaction.payer,
         'Thanks for your support! Here is your NFT'
       );
 
-      //B3. Update the database
-      //    TODO Mark NFT as minted
-      const thing = markNFTAsMinted(nft.id);
+      //B2. Mark NFT as sent
+      await markNFT(nft.id, 'sent');
 
-      //    TODO Mark transaction as mint completed and sent
-      const databaseUpdateNFT = await updateDatabase(
+      //B4. Update the database
+      const databaseUpdateNFT = await updateDatabaseTransaction(
         transaction.id,
-        refundData,
+        sendNFTData,
         'mint_complete'
       );
 

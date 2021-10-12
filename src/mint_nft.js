@@ -1,45 +1,39 @@
 import dotenv from 'dotenv';
-dotenv.config({ path: '../.env' });
-//bring in instance of cardanoCLIJS
 import { cardano } from './cardano.js';
-//bring in wallet opener
 import { openWallet } from './open_wallet.js';
 import { getUnmintedNFT } from './get_unminted_nft.js';
-import util from 'util';
+dotenv.config({ path: '../.env' });
 
 export async function mintNFT() {
   const nftToMint = await getUnmintedNFT();
   const { data, id } = nftToMint;
 
-  //open sender wallet
+  //1. Open sender wallet
   const sender = await openWallet(process.env.CARDANO_MINTING_WALLET);
 
-  //check wallet balance
-  console.log(sender.balance());
-
-  //define mint script
+  //2. Define mint script
   const mintScript = {
     keyHash: cardano.addressKeyHash(sender.name),
     type: 'sig',
   };
 
-  //create policy id
+  //3. Create policy id
   const POLICY_ID = cardano.transactionPolicyid(mintScript);
 
-  //define asset name
-  const ASSET_NAME = '2'; //data.name;
+  //4. Define asset name
+  const ASSET_NAME = data.name;
 
-  //create asset id
+  //5. Create asset id
   const ASSET_ID = POLICY_ID + '.' + ASSET_NAME;
 
-  //define metadata
+  //6. Define metadata
   const metadata = {
     721: {
       [POLICY_ID]: {
         [ASSET_NAME]: {
           name: ASSET_NAME,
           image: data.image,
-          description: 'five samurai, first collection', //data.description,
+          description: data.description,
           type: 'image/png',
           author: 'sleepyslothcollective',
           dna: data.dna,
@@ -51,11 +45,7 @@ export async function mintNFT() {
     },
   };
 
-  // console.log(
-  //   util.inspect(metadata, { showHidden: false, depth: null, colors: true })
-  // );
-
-  //define build transaction
+  //7. Define build transaction
   const createTransaction = (tx) => {
     let raw = cardano.transactionBuildRaw(tx);
     let fee = cardano.transactionCalculateMinFee({
@@ -66,7 +56,7 @@ export async function mintNFT() {
     return cardano.transactionBuildRaw({ ...tx, fee });
   };
 
-  //define sign transaction
+  //8. Define sign transaction
   const signTransaction = (wallet, tx, script) => {
     return cardano.transactionSign({
       signingKeys: [wallet.payment.skey, wallet.payment.skey],
@@ -74,7 +64,7 @@ export async function mintNFT() {
     });
   };
 
-  //define trasaction information
+  //9. Define trasaction information
   const tx = {
     txIn: sender.balance().utxo,
     txOut: [
@@ -90,13 +80,13 @@ export async function mintNFT() {
     witnessCount: 2,
   };
 
-  //create raw transaction
+  //10. Create raw transaction
   const raw = createTransaction(tx);
 
-  //create signed transaction
+  //11. Create signed transaction
   const signed = signTransaction(sender, raw);
 
-  //submit transaction
+  //12. Submit transaction
   cardano.transactionSubmit(signed);
 
   console.log(`Created: `, ASSET_ID, id);
