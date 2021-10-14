@@ -10,6 +10,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@pinata/sdk": "^1.1.23",
     "axios": "^0.22.0",
     "cardanocli-js": "^4.0.1",
     "dotenv": "^10.0.0",
