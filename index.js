@@ -74,7 +74,9 @@ async function nftMainProcess() {
           `refund, incorrect payment sent`
         );
 
-        console.log(`Refund compelete! Waiting for ledger to update`);
+        console.log(
+          `Refund of ${refundData.amount} compelete! Txhash: ${refundData.hash}. Waiting 30 seconds for ledger to update`
+        );
 
         console.log(
           await delay(30000, 'Waited 30 seconds for ledger to update!')
@@ -98,38 +100,40 @@ async function nftMainProcess() {
 
         const nft = await mintNFT(db); //send the db bc querying for unminted nft
 
-        console.log(`NFT minted! Waiting for ledger to update`);
+        console.log(
+          `NFT with id ${nft.id} minted! Waiting 5 minutes for ledger to update`
+        );
 
         console.log(
           await delay(300000, 'Waited 5 minutes for ledger to update!')
         );
 
         //B2. Mark NFT as minted
-        console.log(`Marking NFT as minted! 📑`);
+        console.log(`Marking NFT with id ${nft.id} as minted! 📑`);
         let nftUpdate = await markNFT(db, nft.id, 'minted');
-        console.log(`NFT updated with ${nftUpdate}! 📑`);
 
         //B3. Send NFT to payer
-        console.log(`Sending nft to customer! 📮`);
+        console.log(`Sending NFT with id ${nft.id} to customer! 📮`);
         const sendNFTData = await sendNFT(
           nft.asset,
           transaction.payer,
           'Thanks for your support! Here is your NFT'
         );
 
-        console.log(`NFT sent! Waiting for ledger to update`);
+        console.log(
+          `NFT sent! Txhash: ${sendNFTData.hash}. Waiting 5 minutes for ledger to update`
+        );
 
         console.log(
           await delay(300000, 'Waited 5 minutes for ledger to update!')
         );
 
         //B4. Mark NFT as sent
-        console.log(`Marking NFT as sent! 📑`);
+        console.log(`Marking NFT with id ${nft.id} as sent! 📑`);
         nftUpdate = await markNFT(db, nft.id, 'sent');
-        console.log(`NFT updated with ${nftUpdate}! 📑`);
 
         //B5. Update the database
-        console.log(`Updating database! 📑`);
+        console.log(`Updating database for ${sendNFTData.nft}! 📑`);
         const databaseUpdateNFT = await updateDatabaseTransaction(
           db,
           transaction.id,
@@ -138,7 +142,7 @@ async function nftMainProcess() {
         );
 
         console.log({
-          result: `Payment with ID: ${databaseUpdateNFT.id} added.`,
+          result: `NFT sale with ID: ${databaseUpdateNFT.id} added. 🥓`,
         });
         break;
       default:

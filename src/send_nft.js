@@ -88,7 +88,7 @@ export async function sendNFT(asset, customer, message) {
   //11. Submit transaction
   const txHash = cardano.transactionSubmit(signed);
 
-  console.log(`tx hash: ${txHash}`);
+  // console.log(`tx hash: ${txHash}`);
 
   return {
     nft: NFT,
@@ -98,5 +98,3 @@ export async function sendNFT(asset, customer, message) {
     total: raw.fee / 1000000 + 1.5,
   };
 }
-
-sendNFT();
