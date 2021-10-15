@@ -72,7 +72,7 @@ export async function refund(receiverAddress, refundAmount, message) {
   //11. Submit transaction
   const txHash = cardano.transactionSubmit(signed);
 
-  console.log(txHash);
+  console.log(`tx hash for refund is: ${txHash}`);
 
   return {
     nft: 'nil',

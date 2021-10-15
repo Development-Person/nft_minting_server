@@ -13,5 +13,5 @@ export async function markNFT(db, transactionId, status) {
   //3B. Update database
   const updateDocData = await updateDoc(currentDoc, updateTransactionData);
 
-  return updateDocData;
+  return status;
 }

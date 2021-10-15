@@ -4,14 +4,24 @@ import { cardano } from './cardano.js';
 import { openWallet } from './open_wallet.js';
 
 export async function sendNFT(asset, customer, message) {
+  console.log(`asset is ${asset}`);
+
   //1. Open sender wallet
   const sender = await openWallet(process.env.CARDANO_MINTING_WALLET);
 
   //2. Set receiver wallet
   const receiver = customer;
+  // const receiver =
+  // 'addr_test1qqfqr0nuudjugk3k2zjc3ypv7jgcljkd8htpxwdcdsz8xf87l79z7h9wsnusyuu82cmqp492jjqp69egqc7s8nmq4fgsg4zyq2';
 
   //3. Set nft to send
   const NFT = asset;
+  // const NFT =
+  // '4161264a345e0472b234a458313862c9e2cb380699dd355daf3ec00c.5SamuraiSwordMaster4';
+
+  //4. Set message to send with NFT
+  const messageToSend = message;
+  // const messageToSend = 'Enjoy your NFT!';
 
   //4. Define build transaction
   const createTransaction = (tx) => {
@@ -41,9 +51,13 @@ export async function sendNFT(asset, customer, message) {
     ...sender.balance().value,
   };
 
+  // console.log(`after`, walletBalance);
+
   //7. Subtract 1.5 ADA and NFT from wallet balance
   walletBalance.lovelace = walletBalance.lovelace - cardano.toLovelace(1.5);
   walletBalance[NFT] = 0;
+
+  // console.log(`before`, walletBalance);
 
   //8. Create raw transaction
   const txInfo = {
@@ -61,7 +75,7 @@ export async function sendNFT(asset, customer, message) {
         },
       },
     ],
-    metadata: { 1: { type: message } },
+    metadata: { 1: { type: messageToSend } },
     witnessCount: 1,
   };
 
@@ -74,13 +88,15 @@ export async function sendNFT(asset, customer, message) {
   //11. Submit transaction
   const txHash = cardano.transactionSubmit(signed);
 
-  console.log(txHash);
+  console.log(`tx hash: ${txHash}`);
 
   return {
-    nft: asset,
+    nft: NFT,
     hash: txHash,
     amount: 1.5,
     fee: raw.fee / 1000000,
     total: raw.fee / 1000000 + 1.5,
   };
 }
+
+sendNFT();

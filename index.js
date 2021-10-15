@@ -9,10 +9,12 @@ import { markNFT } from './src/mark_nft.js';
 
 console.log('Scheduler getting up and running! 🏇🏻');
 
-let running = false;
-
 //1. Initialize firebase and return db
 const db = initializeFirebase();
+
+//2. Define cron schedule which will run the main process
+//running tag allows scheduler to skip runs if main process is still running
+let running = false;
 
 const scheduled = cron.schedule('* * * * *', async () => {
   if (running) {
@@ -31,8 +33,10 @@ const scheduled = cron.schedule('* * * * *', async () => {
   running = false;
 });
 
+//3. Start cron scheduler
 scheduled.start();
 
+//4. Define delay function to delay running of main process at key points to allow ledger to update
 function delay(t, val) {
   return new Promise(function (resolve) {
     setTimeout(function () {
@@ -41,11 +45,12 @@ function delay(t, val) {
   });
 }
 
+//5. Define main process
 async function nftMainProcess() {
-  //2. Query DB for all saved incoming transactions.
+  //1. Query DB for all saved incoming transactions.
   const querySnapshot = await getDocs(collection(db, 'payments_in'));
 
-  //3. Push data into array
+  //2. Push data into array
   const savedIncomingTransactionsArray = [];
   querySnapshot.forEach((doc) => {
     savedIncomingTransactionsArray.push(doc.data());
@@ -56,7 +61,7 @@ async function nftMainProcess() {
     return;
   }
 
-  //4. Check status of each transaction
+  //3. Check status of each transaction
   for (const transaction of savedIncomingTransactionsArray) {
     switch (transaction.status) {
       case 'refund':
@@ -69,7 +74,11 @@ async function nftMainProcess() {
           `refund, incorrect payment sent`
         );
 
-        await delay(5000);
+        console.log(`Refund compelete! Waiting for ledger to update`);
+
+        console.log(
+          await delay(30000, 'Waited 30 seconds for ledger to update!')
+        );
 
         //A2. Update the database
         const databaseUpdateRefund = await updateDatabaseTransaction(
@@ -91,29 +100,38 @@ async function nftMainProcess() {
 
         console.log(`NFT minted! Waiting for ledger to update`);
 
-        const wait = await delay(
-          30000,
-          'Waited 30 seconds for ledger to update!'
+        console.log(
+          await delay(300000, 'Waited 5 minutes for ledger to update!')
         );
 
-        console.log(wait);
-
         //B2. Mark NFT as minted
-        await markNFT(db, nft.id, 'minted');
+        console.log(`Marking NFT as minted! 📑`);
+        let nftUpdate = await markNFT(db, nft.id, 'minted');
+        console.log(`NFT updated with ${nftUpdate}! 📑`);
 
         //B3. Send NFT to payer
+        console.log(`Sending nft to customer! 📮`);
         const sendNFTData = await sendNFT(
           nft.asset,
           transaction.payer,
           'Thanks for your support! Here is your NFT'
         );
-        await delay(5000);
+
+        console.log(`NFT sent! Waiting for ledger to update`);
+
+        console.log(
+          await delay(300000, 'Waited 5 minutes for ledger to update!')
+        );
 
         //B4. Mark NFT as sent
-        await markNFT(nft.id, 'sent');
+        console.log(`Marking NFT as sent! 📑`);
+        nftUpdate = await markNFT(db, nft.id, 'sent');
+        console.log(`NFT updated with ${nftUpdate}! 📑`);
 
         //B5. Update the database
+        console.log(`Updating database! 📑`);
         const databaseUpdateNFT = await updateDatabaseTransaction(
+          db,
           transaction.id,
           sendNFTData,
           'mint_complete'
