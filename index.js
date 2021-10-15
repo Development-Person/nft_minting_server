@@ -7,6 +7,8 @@ import { mintNFT } from './src/mint_nft.js';
 import { sendNFT } from './src/send_nft.js';
 import { markNFT } from './src/mark_nft.js';
 
+console.log('Scheduler getting up and running! 🏇🏻');
+
 let running = false;
 
 //1. Initialize firebase and return db
@@ -22,8 +24,6 @@ const scheduled = cron.schedule('* * * * *', async () => {
 
   console.log('Starting main process! 😛');
 
-  await delay(90000);
-
   await nftMainProcess();
 
   console.log('Main process complete! 🤗');
@@ -35,7 +35,6 @@ scheduled.start();
 
 function delay(t, val) {
   return new Promise(function (resolve) {
-    console.log('Delay! 👻');
     setTimeout(function () {
       resolve(val);
     }, t);
@@ -70,8 +69,11 @@ async function nftMainProcess() {
           `refund, incorrect payment sent`
         );
 
+        await delay(5000);
+
         //A2. Update the database
         const databaseUpdateRefund = await updateDatabaseTransaction(
+          db,
           transaction.id,
           refundData,
           'refund_complete'
@@ -84,17 +86,28 @@ async function nftMainProcess() {
       case 'mint':
         //B1. Mint the NFT
         console.log(`Creating nft for ${transaction.id}`);
-        const nft = await mintNFT();
+
+        const nft = await mintNFT(db); //send the db bc querying for unminted nft
+
+        console.log(`NFT minted! Waiting for ledger to update`);
+
+        const wait = await delay(
+          30000,
+          'Waited 30 seconds for ledger to update!'
+        );
+
+        console.log(wait);
 
         //B2. Mark NFT as minted
-        await markNFT(nft.id, 'minted');
+        await markNFT(db, nft.id, 'minted');
 
-        //B3. Send to payer
+        //B3. Send NFT to payer
         const sendNFTData = await sendNFT(
           nft.asset,
           transaction.payer,
           'Thanks for your support! Here is your NFT'
         );
+        await delay(5000);
 
         //B4. Mark NFT as sent
         await markNFT(nft.id, 'sent');
@@ -115,5 +128,3 @@ async function nftMainProcess() {
     }
   }
 }
-
-// nftMainProcess();

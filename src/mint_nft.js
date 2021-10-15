@@ -4,8 +4,8 @@ import { openWallet } from './open_wallet.js';
 import { getUnmintedNFT } from './get_unminted_nft.js';
 dotenv.config({ path: '../.env' });
 
-export async function mintNFT() {
-  const nftToMint = await getUnmintedNFT();
+export async function mintNFT(db) {
+  const nftToMint = await getUnmintedNFT(db);
   const { data, id } = nftToMint;
 
   //1. Open sender wallet

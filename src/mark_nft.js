@@ -1,9 +1,6 @@
 import { doc, updateDoc } from 'firebase/firestore';
-import { initializeFirebase } from './firebase.js';
 
-export async function markNFT(transactionId, status) {
-  const db = initializeFirebase();
-
+export async function markNFT(db, transactionId, status) {
   //1. Get current doc
   const currentDoc = doc(db, 'nfts', transactionId);
 

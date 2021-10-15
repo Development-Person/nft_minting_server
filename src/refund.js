@@ -4,16 +4,16 @@ import { cardano } from './cardano.js';
 import { openWallet } from './open_wallet.js';
 
 export async function refund(receiverAddress, refundAmount, message) {
-  //open sender wallet
+  //1. Open sender wallet
   const sender = await openWallet(process.env.CARDANO_MINTING_WALLET);
 
-  //get sender address
+  //2. Get sender address
   const receiver = receiverAddress;
 
-  //set amount to send
+  //3. Set amount to send
   const amount = refundAmount;
 
-  //define build transaction
+  //4. Define build transaction
   const createTransaction = (tx) => {
     let raw = cardano.transactionBuildRaw(tx);
     let fee = cardano.transactionCalculateMinFee({
@@ -27,7 +27,7 @@ export async function refund(receiverAddress, refundAmount, message) {
     };
   };
 
-  //define sign transaction
+  //5. Define sign transaction
   const signTransaction = (wallet, tx, script) => {
     return cardano.transactionSign({
       signingKeys: [wallet.payment.skey, wallet.payment.skey],
@@ -35,14 +35,15 @@ export async function refund(receiverAddress, refundAmount, message) {
     });
   };
 
+  //6. Get balance of sender wallet
   const walletBalance = {
     ...sender.balance().value,
   };
 
-  //subtracting the send amount from the wallet UTXOValue.lovelace amount but leaving reference to all other tokens unchanged
+  //7. Subtracting the send amount from the wallet UTXOValue.lovelace amount but leaving reference to all other tokens unchanged
   walletBalance.lovelace = walletBalance.lovelace - cardano.toLovelace(amount);
 
-  //define transaction information
+  //8. Define transaction information
   const txInfo = {
     txIn: cardano.queryUtxo(sender.paymentAddr),
     txOut: [
@@ -62,13 +63,13 @@ export async function refund(receiverAddress, refundAmount, message) {
     witnessCount: 1,
   };
 
-  //create raw transaction
+  //9. Create raw transaction
   const raw = createTransaction(txInfo);
 
-  //create signed transaction
+  //10. Create signed transaction
   const signed = signTransaction(sender, raw.transaction);
 
-  //submit transaction
+  //11. Submit transaction
   const txHash = cardano.transactionSubmit(signed);
 
   console.log(txHash);

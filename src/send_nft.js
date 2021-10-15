@@ -1,8 +1,7 @@
 import dotenv from 'dotenv';
-dotenv.config({ path: '../.env' });
+dotenv.config({ path: '~/cardano/minting_server/.env' });
 import { cardano } from './cardano.js';
 import { openWallet } from './open_wallet.js';
-import util from 'util';
 
 export async function sendNFT(asset, customer, message) {
   //1. Open sender wallet
@@ -82,6 +81,6 @@ export async function sendNFT(asset, customer, message) {
     hash: txHash,
     amount: 1.5,
     fee: raw.fee / 1000000,
-    total: raw.fee / 1000000 + amount,
+    total: raw.fee / 1000000 + 1.5,
   };
 }

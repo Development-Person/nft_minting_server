@@ -17,6 +17,12 @@ export function initializeFirebase() {
 
   const app = initializeApp(firebaseConfig);
   const db = getFirestore();
-  connectFirestoreEmulator(db, 'localhost', 8080);
-  return db;
+
+  if (db._settings.host == 'localhost:8080') {
+    return db;
+  } else {
+    console.log(`Emulator connected: Should only run once 🤞🏻`);
+    connectFirestoreEmulator(db, 'localhost', 8080);
+    return db;
+  }
 }

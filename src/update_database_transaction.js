@@ -5,15 +5,13 @@ import {
   updateDoc,
   Timestamp,
 } from 'firebase/firestore';
-import { initializeFirebase } from './firebase.js';
 
 export async function updateDatabaseTransaction(
+  db,
   transactionId,
   newTransactionData,
   status
 ) {
-  const db = initializeFirebase();
-
   //1. Get current doc
   const currentDoc = doc(db, 'payments_in', transactionId);
 
