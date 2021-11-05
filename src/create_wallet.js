@@ -13,6 +13,6 @@ const createWallet = (account) => {
   return cardano.wallet(account);
 };
 
-const wallet = createWallet(process.env.CARDANO_CREATE_WALLET_NAME);
+const wallet = createWallet(`${process.env.CARDANO_CREATE_WALLET_NAME}`);
 
 console.log(`${wallet.name} created!`);

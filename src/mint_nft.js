@@ -35,7 +35,7 @@ export async function mintNFT(db) {
           image: data.image,
           description: data.description,
           type: 'image/png',
-          author: 'sleepyslothcollective',
+          author: 'treatdeliverysystem',
           dna: data.dna,
           edition: data.edition,
           attributes: data.attributes,

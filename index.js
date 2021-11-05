@@ -13,7 +13,7 @@ console.log('Scheduler getting up and running! 🏇🏻');
 const db = initializeFirebase();
 
 //2. Define cron schedule which will run the main process
-//running tag allows scheduler to skip runs if main process is still running
+//Running tag allows scheduler to skip runs if main process is still running
 let running = false;
 
 const scheduled = cron.schedule('* * * * *', async () => {
@@ -45,11 +45,13 @@ function delay(t, val) {
   });
 }
 
-//5. Define main process
+//5. Set current number of orders at 0
+let numberOfOrders = 500;
+
+//6. Define main process
 async function nftMainProcess() {
   //1. Query DB for all saved incoming transactions.
   const querySnapshot = await getDocs(collection(db, 'payments_in'));
-
   //2. Push data into array
   const savedIncomingTransactionsArray = [];
   querySnapshot.forEach((doc) => {
@@ -57,7 +59,7 @@ async function nftMainProcess() {
   });
 
   if (savedIncomingTransactionsArray.length === 0) {
-    console.log('No incoming transactions, exiting 😀');
+    console.log('No incoming transactions, exiting 😀', new Date());
     return;
   }
 
@@ -66,7 +68,7 @@ async function nftMainProcess() {
     switch (transaction.status) {
       case 'refund':
         //A1. Perform the refund
-        console.log(`Processing refund for ${transaction.id}`);
+        console.log(`Processing refund for ${transaction.id}`, new Date());
 
         const refundData = await refund(
           transaction.payer,
@@ -75,7 +77,7 @@ async function nftMainProcess() {
         );
 
         console.log(
-          `Refund of ${refundData.amount} compelete! Txhash: ${refundData.hash}. Waiting 30 seconds for ledger to update`
+          `Refund of ${refundData.amount} ADA complete! Txhash: ${refundData.hash}. Waiting 30 seconds for ledger to update`
         );
 
         console.log(
@@ -95,58 +97,72 @@ async function nftMainProcess() {
         });
         break;
       case 'mint':
-        //B1. Mint the NFT
-        console.log(`Creating nft for ${transaction.id}`);
+        numberOfOrders += 1;
 
-        const nft = await mintNFT(db); //send the db bc querying for unminted nft
+        //B1. Check if NFT orders exceed 500 and set status to refund if true
+        if (numberOfOrders < 500) {
+          //B2. Mint the NFT
+          console.log(`Creating nft for ${transaction.id}`, new Date());
 
-        console.log(
-          `NFT with id ${nft.id} minted! Waiting 5 minutes for ledger to update`
-        );
+          const nft = await mintNFT(db); //send the db bc querying for unminted nft
 
-        console.log(
-          await delay(300000, 'Waited 5 minutes for ledger to update!')
-        );
+          console.log(
+            `NFT with id ${nft.id} minted! Waiting 5 minutes for ledger to update`
+          );
 
-        //B2. Mark NFT as minted
-        console.log(`Marking NFT with id ${nft.id} as minted! 📑`);
-        let nftUpdate = await markNFT(db, nft.id, 'minted');
+          console.log(
+            await delay(300000, 'Waited 5 minutes for ledger to update!')
+          );
 
-        //B3. Send NFT to payer
-        console.log(`Sending NFT with id ${nft.id} to customer! 📮`);
-        const sendNFTData = await sendNFT(
-          nft.asset,
-          transaction.payer,
-          'Thanks for your support! Here is your NFT'
-        );
+          //B3. Mark NFT as minted
+          console.log(`Marking NFT with id ${nft.id} as minted! 📑`);
+          let nftUpdate = await markNFT(db, nft.id, 'minted');
 
-        console.log(
-          `NFT sent! Txhash: ${sendNFTData.hash}. Waiting 5 minutes for ledger to update`
-        );
+          //B4. Send NFT to payer
+          console.log(`Sending NFT with id ${nft.id} to customer! 📮`);
+          const sendNFTData = await sendNFT(
+            nft.asset,
+            transaction.payer,
+            'Thanks for your support! Here is your NFT'
+          );
 
-        console.log(
-          await delay(300000, 'Waited 5 minutes for ledger to update!')
-        );
+          console.log(
+            `NFT sent! Txhash: ${sendNFTData.hash}. Waiting 5 minutes for ledger to update`
+          );
 
-        //B4. Mark NFT as sent
-        console.log(`Marking NFT with id ${nft.id} as sent! 📑`);
-        nftUpdate = await markNFT(db, nft.id, 'sent');
+          console.log(
+            await delay(300000, 'Waited 5 minutes for ledger to update!')
+          );
 
-        //B5. Update the database
-        console.log(`Updating database for ${sendNFTData.nft}! 📑`);
-        const databaseUpdateNFT = await updateDatabaseTransaction(
-          db,
-          transaction.id,
-          sendNFTData,
-          'mint_complete'
-        );
+          //B5. Mark NFT as sent
+          console.log(`Marking NFT with id ${nft.id} as sent! 📑`);
+          nftUpdate = await markNFT(db, nft.id, 'sent');
 
-        console.log({
-          result: `NFT sale with ID: ${databaseUpdateNFT.id} added. 🥓`,
-        });
+          //B6. Update the database
+          console.log(`Updating database for ${sendNFTData.nft}! 📑`);
+          const databaseUpdateNFT = await updateDatabaseTransaction(
+            db,
+            transaction.id,
+            sendNFTData,
+            'mint_complete'
+          );
+
+          console.log({
+            result: `NFT sale with ID: ${databaseUpdateNFT.id} added. 🥓`,
+          });
+        } else {
+          console.log('setting refund');
+          await updateDatabaseTransaction(db, transaction.id, {}, 'refund');
+
+          console.log({
+            result: `Orders exceeded! ${transaction.id} marked for refund! 🤯`,
+          });
+        }
+
         break;
       default:
         break;
     }
   }
+  console.log(`${numberOfOrders} orders placed so far!`, new Date());
 }

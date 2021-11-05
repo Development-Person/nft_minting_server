@@ -3,4 +3,5 @@ node_modules
 priv/
 tmp/
 data/
-connect_node.zsh
+connect_node_test.zsh
+connect_node_main.zsh

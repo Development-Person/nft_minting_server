@@ -1,7 +1,7 @@
 import dotenv from 'dotenv';
+dotenv.config({ path: '~/cardano/minting_server/.env' });
 import pinataSDK from '@pinata/sdk';
 import { createReadStream, readdirSync, readFileSync, writeFileSync } from 'fs';
-dotenv.config({ path: './.env' });
 
 //1. Create instance of pinata
 const pinata = pinataSDK(
@@ -11,10 +11,10 @@ const pinata = pinataSDK(
 
 //2. Creating array of images and json files
 //Sorting images by reading the number in the filename ('5SSM1.png')
-const imageArray = readdirSync(`data/images`).sort((a, b) => {
+const imageArray = readdirSync(`../data/images`).sort((a, b) => {
   return a.slice(4).split('.')[0] - b.slice(4).split('.')[0];
 });
-const jsonArray = readdirSync(`data/json`).sort((a, b) => {
+const jsonArray = readdirSync(`../data/json`).sort((a, b) => {
   return a.slice(4).split('.')[0] - b.slice(4).split('.')[0];
 });
 
@@ -26,8 +26,8 @@ for (const [index, image] of imageArray.entries()) {
   console.log(`processing image ${index + 1} of ${imageArray.length} 🐱‍🐉`);
 
   //3A. Create a read stream and and get the right JSON file
-  const readableStreamForFile = createReadStream(`data/images/${imageName}`);
-  const imageJSON = JSON.parse(readFileSync(`data/json/${jsonName}`));
+  const readableStreamForFile = createReadStream(`../data/images/${imageName}`);
+  const imageJSON = JSON.parse(readFileSync(`../data/json/${jsonName}`));
 
   //3B. Set pinata image metadata and json metadata options
   const imageOptions = {
@@ -66,7 +66,7 @@ for (const [index, image] of imageArray.entries()) {
       console.log(`writing ${imageName} location to json 🐩`);
       imageJSON.image = `ipfs://${result.IpfsHash}`;
       writeFileSync(
-        `data/json/${jsonName}`,
+        `../data/json/${jsonName}`,
         JSON.stringify(imageJSON, null, 2)
       );
     })
@@ -75,7 +75,7 @@ for (const [index, image] of imageArray.entries()) {
       console.log(`uploading ${jsonName} to pinata 🐱‍🏍`);
 
       pinata.pinJSONToIPFS(
-        JSON.parse(readFileSync(`data/json/${jsonName}`)),
+        JSON.parse(readFileSync(`../data/json/${jsonName}`)),
         metaOptions
       );
     })
