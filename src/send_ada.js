@@ -23,7 +23,7 @@ async function sendADA() {
   }
 
   //3. Set amount to send
-  const amount = 10;
+  const amount = 20;
 
   //4. Define build transaction
   const createTransaction = (tx) => {
@@ -70,7 +70,7 @@ async function sendADA() {
         },
       },
     ],
-    metadata: { 1: { type: 'seed' } },
+    metadata: { 1: { type: 'not seed' } },
     witnessCount: 1,
   };
 
