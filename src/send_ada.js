@@ -5,10 +5,22 @@ import { openWallet } from './open_wallet.js';
 
 async function sendADA() {
   //1. Open sender wallet
-  const sender = await openWallet(process.env.SAMURAI_FUNDING_WALLET);
+  let sender;
 
-  //2. Get sender address
-  const receiver = process.env.SAMURAI_MINTING_WALLET_ADDRESS;
+  if (process.env.MODE === 'DEVELOPMENT') {
+    sender = await openWallet(process.env.CARDANO_FUND_WALLET);
+  } else if (process.env.MODE === 'PRODUCTION') {
+    sender = await openWallet(process.env.SAMURAI_FUNDING_WALLET);
+  }
+
+  //2. Get receiver address
+  let receiver;
+
+  if (process.env.MODE === 'DEVELOPMENT') {
+    receiver = process.env.CARDANO_MINTING_WALLET_ADDRESS;
+  } else if (process.env.MODE === 'PRODUCTION') {
+    receiver = process.env.SAMURAI_MINTING_WALLET_ADDRESS;
+  }
 
   //3. Set amount to send
   const amount = 10;

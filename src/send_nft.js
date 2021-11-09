@@ -7,7 +7,13 @@ export async function sendNFT(asset, customer, message) {
   console.log(`asset is ${asset}`);
 
   //1. Open sender wallet
-  const sender = await openWallet(process.env.CARDANO_MINTING_WALLET);
+  let sender;
+
+  if (process.env.MODE === 'DEVELOPMENT') {
+    sender = await openWallet(process.env.CARDANO_MINTING_WALLET);
+  } else if (process.env.MODE === 'PRODUCTION') {
+    sender = await openWallet(process.env.SAMURAI_MINTING_WALLET);
+  }
 
   //2. Set receiver wallet
   const receiver = customer;

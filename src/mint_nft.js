@@ -9,7 +9,13 @@ export async function mintNFT(db) {
   const { data, id } = nftToMint;
 
   //1. Open sender wallet
-  const sender = await openWallet(process.env.CARDANO_MINTING_WALLET);
+  let sender;
+
+  if (process.env.MODE === 'DEVELOPMENT') {
+    sender = await openWallet(process.env.CARDANO_MINTING_WALLET);
+  } else if (process.env.MODE === 'PRODUCTION') {
+    sender = await openWallet(process.env.SAMURAI_MINTING_WALLET);
+  }
 
   //2. Define mint script
   const mintScript = {

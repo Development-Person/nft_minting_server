@@ -46,7 +46,7 @@ function delay(t, val) {
 }
 
 //5. Set current number of orders at 0
-let numberOfOrders = 500;
+let numberOfOrders = 0;
 
 //6. Define main process
 async function nftMainProcess() {

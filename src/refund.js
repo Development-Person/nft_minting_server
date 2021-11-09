@@ -5,7 +5,13 @@ import { openWallet } from './open_wallet.js';
 
 export async function refund(receiverAddress, refundAmount, message) {
   //1. Open sender wallet
-  const sender = await openWallet(process.env.CARDANO_MINTING_WALLET);
+  let sender;
+
+  if (process.env.MODE === 'DEVELOPMENT') {
+    sender = await openWallet(process.env.CARDANO_MINTING_WALLET);
+  } else if (process.env.MODE === 'PRODUCTION') {
+    sender = await openWallet(process.env.SAMURAI_MINTING_WALLET);
+  }
 
   //2. Get sender address
   const receiver = receiverAddress;

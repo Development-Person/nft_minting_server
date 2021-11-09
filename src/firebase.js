@@ -18,12 +18,12 @@ export function initializeFirebase() {
   const app = initializeApp(firebaseConfig);
   const db = getFirestore();
 
-  // if (process.env.MODE === 'DEVELOPMENT') {
-  console.log(`Emulator connected: Should only run once 🤞🏻`);
-  connectFirestoreEmulator(db, 'localhost', 8080);
-  return db;
-  // } else {
-  // console.log(`Connecting to Production DB: Should only run once 🤞🏻`);
-  // return db;
-  // }
+  if (process.env.MODE === 'DEVELOPMENT') {
+    console.log(`Emulator connected: Should only run once 🤞🏻`);
+    connectFirestoreEmulator(db, 'localhost', 8080);
+    return db;
+  } else if (process.env.MODE === 'PRODUCTION') {
+    console.log(`Connecting to Production DB: Should only run once 🤞🏻`);
+    return db;
+  }
 }
