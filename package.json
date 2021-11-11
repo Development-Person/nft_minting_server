@@ -11,11 +11,13 @@
   "license": "ISC",
   "dependencies": {
     "@pinata/sdk": "^1.1.23",
+    "app-root-path": "^3.0.0",
     "axios": "^0.22.0",
     "cardanocli-js": "^4.0.1",
     "dotenv": "^10.0.0",
     "express": "^4.17.1",
     "firebase": "^9.1.1",
-    "node-cron": "^3.0.0"
+    "node-cron": "^3.0.0",
+    "winston": "^3.3.3"
   }
 }

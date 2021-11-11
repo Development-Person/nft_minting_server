@@ -1,14 +1,17 @@
 import { collection, getDocs } from 'firebase/firestore';
 import cron from 'node-cron';
-import { refund } from './src/refund.js';
+// import { refund } from './src/refund.js';
 import { initializeFirebase } from './src/firebase.js';
 import { updateDatabaseTransaction } from './src/update_database_transaction.js';
-import { mintNFT } from './src/mint_nft.js';
-import { sendNFT } from './src/send_nft.js';
-import { markNFT } from './src/mark_nft.js';
+// import { mintNFT } from './src/mint_nft.js';
+// import { sendNFT } from './src/send_nft.js';
+// import { markNFT } from './src/mark_nft.js';
 import { orderRead, orderWrite } from './src/order_tracker.js';
+import { logger } from './logger/logger.js';
 
-console.log('Scheduler getting up and running! 🏇🏻');
+logger.log({ level: 'info', message: 'Scheduler getting up and running! 🏇🏻' });
+
+// logger.log({ level: 'error', message: `${new Error(`oh no!`)}` });
 
 //1. Initialize firebase and return db
 const db = initializeFirebase();
@@ -19,16 +22,19 @@ let running = false;
 
 const scheduled = cron.schedule('* * * * *', async () => {
   if (running) {
-    console.log(
-      'Task already running, exiting to try again later 😘.',
-      new Date()
-    );
+    logger.log({
+      level: 'silly',
+      message: 'Task already running, exiting to try again later 😘.',
+    });
     return;
   }
 
   running = true;
 
-  console.log('Starting main process! 😛', new Date());
+  logger.log({
+    level: 'silly',
+    message: 'Starting main process! 😛',
+  });
 
   await nftMainProcess();
 
@@ -61,7 +67,11 @@ async function nftMainProcess() {
   });
 
   if (savedIncomingTransactionsArray.length === 0) {
-    console.log('No incoming transactions, exiting 😀', new Date());
+    logger.log({
+      level: 'info',
+      message: 'No incoming transactions, exiting 😀',
+    });
+
     return;
   }
 
@@ -70,7 +80,10 @@ async function nftMainProcess() {
     switch (transaction.status) {
       case 'refund':
         //A1. Perform the refund
-        console.log(`${transaction.id}: Processing refund`, new Date());
+        logger.log({
+          level: 'info',
+          message: `${transaction.id}: Processing refund`,
+        });
 
         const refundData = await refund(
           transaction.payer,
@@ -86,10 +99,11 @@ async function nftMainProcess() {
           'refund_complete'
         );
 
-        console.log(
-          `${transaction.id}: Refund of ${refundData.amount} ADA complete! Txhash: ${refundData.hash}. 
-          Payment with ID: ${databaseUpdateRefund.id} added. Waiting 5 minutes for ledger to update ⏱`
-        );
+        logger.log({
+          level: 'info',
+          message: `${transaction.id}: Refund of ${refundData.amount} ADA complete! Txhash: ${refundData.hash}. 
+          Payment with ID: ${databaseUpdateRefund.id} added. Waiting 5 minutes for ledger to update ⏱`,
+        });
 
         console.log(
           await delay(
@@ -106,27 +120,31 @@ async function nftMainProcess() {
         //B1. Check if NFT orders exceed 500 and set status to refund if true
         if (numberOfOrders < 500) {
           //B2. Mint the NFT
-          console.log(`${transaction.id}: Creating nft`, new Date());
+          logger.log({
+            level: 'info',
+            message: `${transaction.id}: Creating nft`,
+          });
 
           const nft = await mintNFT(db); //send the db bc querying for unminted nft
 
           //B3. Mark NFT as minted
           let nftUpdate = await markNFT(db, nft.id, 'minted');
 
-          console.log(
-            `${transaction.id}: Minted NFT ${nft.id}! 📑 Waiting 5 minutes for ledger to update ⏱`,
-            new Date()
-          );
+          logger.log({
+            level: 'info',
+            message: `${transaction.id}: Minted NFT ${nft.id}! 📑 Waiting 5 minutes for ledger to update ⏱`,
+          });
 
           console.log(
             await delay(300000, 'Waited 5 minutes for ledger to update! ⏰')
           );
 
           //B4. Send NFT to payer
-          console.log(
-            `${transaction.id}: Sending NFT ${nft.id} to customer! 📮`,
-            new Date()
-          );
+          logger.log({
+            level: 'info',
+            message: `${transaction.id}: Sending NFT ${nft.id} to customer! 📮`,
+          });
+
           const sendNFTData = await sendNFT(
             nft.asset,
             transaction.payer,
@@ -134,13 +152,19 @@ async function nftMainProcess() {
           );
 
           //B5. Mark NFT as sent
-          console.log(`${transaction.id}: Marking NFT ${nft.id} as sent! 📑`);
+          logger.log({
+            level: 'info',
+            message: `${transaction.id}: Marking NFT ${nft.id} as sent! 📑`,
+          });
+
           nftUpdate = await markNFT(db, nft.id, 'sent');
 
           //B6. Update the database
-          console.log(
-            `${transaction.id}: Updating database for ${sendNFTData.nft}! 📑`
-          );
+          logger.log({
+            level: 'info',
+            message: `${transaction.id}: Updating database for ${sendNFTData.nft}! 📑`,
+          });
+
           const databaseUpdateNFT = await updateDatabaseTransaction(
             db,
             transaction.id,
@@ -148,19 +172,20 @@ async function nftMainProcess() {
             'mint_complete'
           );
 
-          console.log(
-            `${transaction.id}: NFT sent! Txhash: ${sendNFTData.hash}. NFT sale with ID: ${databaseUpdateNFT.id} added. 🥓 
-            Waiting 5 minutes for ledger to update ⌚`
-          );
+          logger.log({
+            level: 'info',
+            message: `${transaction.id}: NFT sent! Txhash: ${sendNFTData.hash}. NFT sale with ID: ${databaseUpdateNFT.id} added. 🥓 
+            Waiting 5 minutes for ledger to update ⌚`,
+          });
 
           console.log(
             await delay(300000, 'Waited 5 minutes for ledger to update! ⏰')
           );
         } else {
-          console.log(
-            `${transaction.id}: Orders exceeded! Marked for refund! 🤯`,
-            new Date()
-          );
+          logger.log({
+            level: 'info',
+            message: `${transaction.id}: Orders exceeded! Marked for refund! 🤯`,
+          });
 
           await updateDatabaseTransaction(db, transaction.id, {}, 'refund');
         }
@@ -170,5 +195,8 @@ async function nftMainProcess() {
         break;
     }
   }
-  console.log(`${numberOfOrders} orders placed so far!`, new Date());
+  logger.log({
+    level: 'info',
+    message: `${numberOfOrders} orders placed so far!`,
+  });
 }

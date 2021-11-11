@@ -5,3 +5,6 @@ tmp/
 data/
 connect_node_test.zsh
 connect_node_main.zsh
+logger/error.log
+logger/info.log
+logger/running.log
