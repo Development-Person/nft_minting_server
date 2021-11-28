@@ -1,20 +1,22 @@
 import { collection, getDocs } from 'firebase/firestore';
 import cron from 'node-cron';
-// import { refund } from './src/refund.js';
+import { refund } from './src/refund.js';
 import { initializeFirebase } from './src/firebase.js';
 import { updateDatabaseTransaction } from './src/update_database_transaction.js';
-// import { mintNFT } from './src/mint_nft.js';
-// import { sendNFT } from './src/send_nft.js';
-// import { markNFT } from './src/mark_nft.js';
+import { connectCardano } from './src/cardano.js';
+import { mintNFT } from './src/mint_nft.js';
+import { sendNFT } from './src/send_nft.js';
+import { markNFT } from './src/mark_nft.js';
 import { orderRead, orderWrite } from './src/order_tracker.js';
 import { logger } from './logger/logger.js';
 
 logger.log({ level: 'info', message: 'Scheduler getting up and running! 🏇🏻' });
 
-// logger.log({ level: 'error', message: `${new Error(`oh no!`)}` });
-
 //1. Initialize firebase and return db
 const db = initializeFirebase();
+
+//1. Connect to cardano network
+const cardano = await connectCardano();
 
 //2. Define cron schedule which will run the main process
 //Running tag allows scheduler to skip runs if main process is still running
@@ -58,15 +60,15 @@ let numberOfOrders = (await orderRead()) || 0;
 
 //6. Define main process
 async function nftMainProcess() {
-  //1. Query DB for all saved incoming transactions.
-  const querySnapshot = await getDocs(collection(db, 'payments_in'));
-  //2. Push data into array
-  const savedIncomingTransactionsArray = [];
-  querySnapshot.forEach((doc) => {
-    savedIncomingTransactionsArray.push(doc.data());
+  logger.log({
+    level: 'info',
+    message: `${numberOfOrders} orders placed so far!`,
   });
 
-  if (savedIncomingTransactionsArray.length === 0) {
+  //1. Query DB for all saved incoming transactions.
+  const querySnapshot = await getDocs(collection(db, 'payments_in'));
+
+  if (querySnapshot.empty) {
     logger.log({
       level: 'info',
       message: 'No incoming transactions, exiting 😀',
@@ -74,6 +76,12 @@ async function nftMainProcess() {
 
     return;
   }
+
+  //2. Push data into array
+  const savedIncomingTransactionsArray = [];
+  querySnapshot.forEach((doc) => {
+    savedIncomingTransactionsArray.push(doc.data());
+  });
 
   //3. Check status of each transaction
   for (const transaction of savedIncomingTransactionsArray) {
@@ -88,8 +96,11 @@ async function nftMainProcess() {
         const refundData = await refund(
           transaction.payer,
           transaction.ada,
-          `refund, incorrect payment sent`
+          `refund, incorrect payment sent`,
+          cardano
         );
+
+        console.log(refundData);
 
         //A2. Update the database
         const databaseUpdateRefund = await updateDatabaseTransaction(
@@ -125,7 +136,7 @@ async function nftMainProcess() {
             message: `${transaction.id}: Creating nft`,
           });
 
-          const nft = await mintNFT(db); //send the db bc querying for unminted nft
+          const nft = await mintNFT(db, cardano); //send the db bc querying for unminted nft
 
           //B3. Mark NFT as minted
           let nftUpdate = await markNFT(db, nft.id, 'minted');
@@ -148,7 +159,8 @@ async function nftMainProcess() {
           const sendNFTData = await sendNFT(
             nft.asset,
             transaction.payer,
-            'Thanks for your support! Here is your NFT'
+            'Thanks for your support! Here is your NFT',
+            cardano
           );
 
           //B5. Mark NFT as sent
@@ -168,7 +180,7 @@ async function nftMainProcess() {
           const databaseUpdateNFT = await updateDatabaseTransaction(
             db,
             transaction.id,
-            sendNFTData,
+            { ...sendNFTData, name: nft.name },
             'mint_complete'
           );
 
@@ -195,8 +207,4 @@ async function nftMainProcess() {
         break;
     }
   }
-  logger.log({
-    level: 'info',
-    message: `${numberOfOrders} orders placed so far!`,
-  });
 }

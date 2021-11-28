@@ -29,6 +29,7 @@ export async function updateDatabaseTransaction(
     const date = new Date();
 
     const newTransactionDataDocData = {
+      name: newTransactionData.name,
       nft: newTransactionData.nft,
       hash: newTransactionData.hash,
       amount: Number(newTransactionData.amount),

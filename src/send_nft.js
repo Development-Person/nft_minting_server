@@ -1,18 +1,19 @@
 import dotenv from 'dotenv';
 dotenv.config({ path: '~/cardano/minting_server/.env' });
-import { cardano } from './cardano.js';
 import { openWallet } from './open_wallet.js';
 
-export async function sendNFT(asset, customer, message) {
+export async function sendNFT(asset, customer, message, cardano) {
   console.log(`asset is ${asset}`);
 
   //1. Open sender wallet
   let sender;
 
   if (process.env.MODE === 'DEVELOPMENT') {
-    sender = await openWallet(process.env.CARDANO_MINTING_WALLET);
+    sender = await openWallet(cardano, process.env.CARDANO_MINTING_WALLET);
   } else if (process.env.MODE === 'PRODUCTION') {
-    sender = await openWallet(process.env.SAMURAI_MINTING_WALLET);
+    sender = await openWallet(cardano, process.env.SAMURAI_MINTING_WALLET);
+  } else {
+    throw new Error('No sender wallet!');
   }
 
   //2. Set receiver wallet
@@ -93,8 +94,6 @@ export async function sendNFT(asset, customer, message) {
 
   //11. Submit transaction
   const txHash = cardano.transactionSubmit(signed);
-
-  // console.log(`tx hash: ${txHash}`);
 
   return {
     nft: NFT,

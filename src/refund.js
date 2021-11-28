@@ -1,16 +1,15 @@
 import dotenv from 'dotenv';
 dotenv.config({ path: '../.env' });
-import { cardano } from './cardano.js';
 import { openWallet } from './open_wallet.js';
 
-export async function refund(receiverAddress, refundAmount, message) {
+export async function refund(receiverAddress, refundAmount, message, cardano) {
   //1. Open sender wallet
   let sender;
 
   if (process.env.MODE === 'DEVELOPMENT') {
-    sender = await openWallet(process.env.CARDANO_MINTING_WALLET);
+    sender = await openWallet(cardano, process.env.CARDANO_MINTING_WALLET);
   } else if (process.env.MODE === 'PRODUCTION') {
-    sender = await openWallet(process.env.SAMURAI_MINTING_WALLET);
+    sender = await openWallet(cardano, process.env.SAMURAI_MINTING_WALLET);
   }
 
   //2. Get sender address
@@ -78,10 +77,9 @@ export async function refund(receiverAddress, refundAmount, message) {
   //11. Submit transaction
   const txHash = cardano.transactionSubmit(signed);
 
-  // console.log(`tx hash for refund is: ${txHash}`);
-
   return {
     nft: 'nil',
+    name: 'nil',
     hash: txHash,
     amount: amount,
     fee: raw.fee / 1000000,

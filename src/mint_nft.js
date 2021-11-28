@@ -1,20 +1,23 @@
 import dotenv from 'dotenv';
-import { cardano } from './cardano.js';
 import { openWallet } from './open_wallet.js';
 import { getUnmintedNFT } from './get_unminted_nft.js';
 dotenv.config({ path: '../.env' });
 
-export async function mintNFT(db) {
+export async function mintNFT(db, cardano) {
   const nftToMint = await getUnmintedNFT(db);
   const { data, id } = nftToMint;
+
+  console.log(nftToMint);
 
   //1. Open sender wallet
   let sender;
 
   if (process.env.MODE === 'DEVELOPMENT') {
-    sender = await openWallet(process.env.CARDANO_MINTING_WALLET);
+    sender = await openWallet(cardano, process.env.CARDANO_MINTING_WALLET);
   } else if (process.env.MODE === 'PRODUCTION') {
-    sender = await openWallet(process.env.SAMURAI_MINTING_WALLET);
+    sender = await openWallet(cardano, process.env.SAMURAI_MINTING_WALLET);
+  } else {
+    throw new Error('No sender wallet!');
   }
 
   //2. Define mint script
@@ -22,6 +25,8 @@ export async function mintNFT(db) {
     keyHash: cardano.addressKeyHash(sender.name),
     type: 'sig',
   };
+
+  console.log(mintScript);
 
   //3. Create policy id
   const POLICY_ID = cardano.transactionPolicyid(mintScript);
@@ -98,6 +103,7 @@ export async function mintNFT(db) {
   console.log(`Created: `, ASSET_ID, id);
 
   return {
+    name: data.name,
     asset: ASSET_ID,
     id,
   };

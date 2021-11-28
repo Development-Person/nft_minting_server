@@ -1,4 +1,4 @@
-import { collection, query, where, getDocs } from 'firebase/firestore';
+import { collection, query, where, getDocs, limit } from 'firebase/firestore';
 import axios from 'axios';
 
 export async function getUnmintedNFT(db) {
@@ -7,10 +7,13 @@ export async function getUnmintedNFT(db) {
 
   //2. Get all unminted NFTs from database and push into array
   const nftCollectionRef = collection(db, 'nfts');
+
   const nftCollectionUnmintedQuery = query(
     nftCollectionRef,
-    where('status', '==', 'fresh')
+    where('status', '==', 'fresh'),
+    limit(1)
   );
+
   const nftCollectionUnmintedQuerySnapshot = await getDocs(
     nftCollectionUnmintedQuery
   );
