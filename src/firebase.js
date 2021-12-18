@@ -1,5 +1,9 @@
 import dotenv from 'dotenv';
-dotenv.config({ path: '~/cardano/minting_server/.env' });
+import os from 'os';
+import path from 'path';
+dotenv.config({
+  path: path.join(os.homedir(), 'code/projects/nft_minting_server/.env'),
+});
 import { initializeApp } from 'firebase/app';
 import { getFirestore, connectFirestoreEmulator } from 'firebase/firestore';
 

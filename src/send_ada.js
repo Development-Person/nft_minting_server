@@ -1,9 +1,15 @@
 import dotenv from 'dotenv';
-dotenv.config({ path: '../.env' });
-import { cardano } from './cardano.js';
+import os from 'os';
+import path from 'path';
+dotenv.config({
+  path: path.join(os.homedir(), 'code/projects/nft_minting_server/.env'),
+});
+import { connectCardano } from './cardano.js';
 import { openWallet } from './open_wallet.js';
 
 async function sendADA() {
+  const cardano = await connectCardano();
+
   //1. Open sender wallet
   let sender;
 

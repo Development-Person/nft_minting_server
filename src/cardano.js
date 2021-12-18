@@ -2,9 +2,13 @@ import CardanocliJs from 'cardanocli-js';
 import os from 'os';
 import path from 'path';
 import dotenv from 'dotenv';
-dotenv.config({ path: '~/cardano/minting_server/.env' });
-const dir = path.join(os.homedir(), '/cardano/minting_server');
+dotenv.config({
+  path: path.join(os.homedir(), 'code/projects/nft_minting_server/.env'),
+});
+const dir = path.join(os.homedir(), 'code/projects/nft_minting_server');
 let network, filePath, socketPath, cardano;
+
+console.log(dir);
 
 export async function connectCardano() {
   console.log(`Starting in ${process.env.MODE}`);
@@ -19,7 +23,7 @@ export async function connectCardano() {
     socketPath = path.join(
       os.homedir(),
       'cardano',
-      'main',
+      'mainnet',
       'db',
       'node.socket'
     );

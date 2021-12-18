@@ -112,7 +112,7 @@ async function nftMainProcess() {
 
         logger.log({
           level: 'info',
-          message: `${transaction.id}: Refund of ${refundData.amount} ADA complete! Txhash: ${refundData.hash}. 
+          message: `${transaction.id}: Refund of ${refundData.amount} ADA complete! Txhash: ${refundData.hash}.
           Payment with ID: ${databaseUpdateRefund.id} added. Waiting 5 minutes for ledger to update ⏱`,
         });
 
@@ -186,7 +186,7 @@ async function nftMainProcess() {
 
           logger.log({
             level: 'info',
-            message: `${transaction.id}: NFT sent! Txhash: ${sendNFTData.hash}. NFT sale with ID: ${databaseUpdateNFT.id} added. 🥓 
+            message: `${transaction.id}: NFT sent! Txhash: ${sendNFTData.hash}. NFT sale with ID: ${databaseUpdateNFT.id} added. 🥓
             Waiting 5 minutes for ledger to update ⌚`,
           });
 

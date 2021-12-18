@@ -1,7 +1,11 @@
-import dotenv from 'dotenv';
 import { openWallet } from './open_wallet.js';
 import { getUnmintedNFT } from './get_unminted_nft.js';
-dotenv.config({ path: '../.env' });
+import os from 'os';
+import path from 'path';
+import dotenv from 'dotenv';
+dotenv.config({
+  path: path.join(os.homedir(), 'code/projects/nft_minting_server/.env'),
+});
 
 export async function mintNFT(db, cardano) {
   const nftToMint = await getUnmintedNFT(db);

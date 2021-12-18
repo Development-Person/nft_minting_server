@@ -1,9 +1,15 @@
 //bring in instance of cardanoCLIJS
-import { cardano } from './cardano.js';
+import { connectCardano } from './cardano.js';
+import os from 'os';
+import path from 'path';
 import dotenv from 'dotenv';
-dotenv.config({ path: '../.env' });
+dotenv.config({
+  path: path.join(os.homedir(), 'code/projects/nft_minting_server/.env'),
+});
 
-function checkWallet(name) {
+async function checkWallet(name) {
+  const cardano = await connectCardano();
+
   const wallet = cardano.wallet(name);
 
   return wallet;
@@ -12,12 +18,12 @@ function checkWallet(name) {
 let fundingWallet, mintingWallet;
 
 if (process.env.MODE === 'DEVELOPMENT') {
-  fundingWallet = checkWallet(process.env.CARDANO_FUND_WALLET);
-  mintingWallet = checkWallet(process.env.CARDANO_MINTING_WALLET);
+  fundingWallet = await checkWallet(process.env.CARDANO_FUND_WALLET);
+  mintingWallet = await checkWallet(process.env.CARDANO_MINTING_WALLET);
 } else if (process.env.MODE === 'PRODUCTION') {
-  fundingWallet = checkWallet(process.env.SAMURAI_FUNDING_WALLET);
-  mintingWallet = checkWallet(process.env.SAMURAI_MINTING_WALLET);
+  fundingWallet = await checkWallet(process.env.SAMURAI_FUNDING_WALLET);
+  mintingWallet = await checkWallet(process.env.SAMURAI_MINTING_WALLET);
 }
 
-console.log(`fundingWallet`, fundingWallet.balance());
-console.log(`mintingWallet`, mintingWallet.balance());
+console.log(`fundingWallet`, fundingWallet.balance().value);
+console.log(`mintingWallet`, mintingWallet.balance().value);
