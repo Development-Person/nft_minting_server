@@ -19,8 +19,12 @@ export function initializeFirebase() {
     measurementId: process.env.FIREBASE_MEASUREMENT_ID,
   };
 
+  console.log(firebaseConfig);
+
   const app = initializeApp(firebaseConfig);
   const db = getFirestore();
+
+  console.log(db);
 
   if (process.env.MODE === 'DEVELOPMENT') {
     console.log(`Emulator connected: Should only run once 🤞🏻`);

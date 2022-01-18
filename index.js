@@ -79,6 +79,7 @@ async function nftMainProcess() {
 
   //2. Push data into array
   const savedIncomingTransactionsArray = [];
+
   querySnapshot.forEach((doc) => {
     savedIncomingTransactionsArray.push(doc.data());
   });
@@ -204,6 +205,7 @@ async function nftMainProcess() {
 
         break;
       default:
+        console.log('got to the end!');
         break;
     }
   }

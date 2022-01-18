@@ -24,3 +24,5 @@ console.log(process.env.CARDANO_CREATE_WALLET_NAME);
 const wallet = await createWallet(`${process.env.CARDANO_CREATE_WALLET_NAME}`);
 
 console.log(`${wallet.name} created!`);
+
+createWallet();
