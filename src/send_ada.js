@@ -11,25 +11,14 @@ async function sendADA() {
   const cardano = await connectCardano();
 
   //1. Open sender wallet
-  let sender;
+  const sender = await openWallet(cardano, 'FiveSamuraiFunding');
 
-  if (process.env.MODE === 'DEVELOPMENT') {
-    sender = await openWallet(process.env.CARDANO_FUND_WALLET);
-  } else if (process.env.MODE === 'PRODUCTION') {
-    sender = await openWallet(process.env.SAMURAI_FUNDING_WALLET);
-  }
-
-  //2. Get receiver address
-  let receiver;
-
-  if (process.env.MODE === 'DEVELOPMENT') {
-    receiver = process.env.CARDANO_MINTING_WALLET_ADDRESS;
-  } else if (process.env.MODE === 'PRODUCTION') {
-    receiver = process.env.SAMURAI_MINTING_WALLET_ADDRESS;
-  }
+  //2. Set receiver wallet
+  const receiver =
+    'addr1qyar2sdf40rwm5p6u5aezm4qyhk9yz8se6yh5q5h5y70dqf3e6r2ktvryrnkqaxg8h4430khgwuxaenutswqm9t2s07qctf9xl';
 
   //3. Set amount to send
-  const amount = 20;
+  const amount = 28;
 
   //4. Define build transaction
   const createTransaction = (tx) => {
@@ -79,6 +68,9 @@ async function sendADA() {
     metadata: { 1: { type: 'not seed' } },
     witnessCount: 1,
   };
+
+  delete txInfo.txIn[0].value.undefined;
+  delete txInfo.txOut[0].value.undefined;
 
   //9. Create raw transaction
   const raw = createTransaction(txInfo);
